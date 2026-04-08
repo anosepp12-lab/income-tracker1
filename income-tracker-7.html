@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مدير دخلي">
+<meta name="theme-color" content="#0a0a1a">
+<title>مدير دخلي الشهري</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #0a0a1a 0%, #1a1040 50%, #0d1f2d 100%);
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    color: #fff;
+    padding-bottom: 80px;
+  }
+
+  /* Install banner */
+  #install-banner {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    padding: 14px 16px;
+    align-items: center; gap: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  #install-banner.show { display: flex; }
+  #install-banner .ib-icon { font-size: 28px; }
+  #install-banner .ib-text { flex: 1; }
+  #install-banner .ib-title { font-size: 13px; font-weight: 700; }
+  #install-banner .ib-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  #install-banner .ib-btn { background: #fff; color: #4f46e5; border: none; border-radius: 10px; padding: 8px 14px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  #install-banner .ib-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 18px; cursor: pointer; padding: 4px; }
+
+  /* iOS install guide */
+  #ios-guide {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+    background: #1e1b4b;
+    border-top: 1px solid rgba(124,58,237,0.5);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  #ios-guide.show { display: block; }
+  #ios-guide .ig-title { font-size: 15px; font-weight: 800; margin-bottom: 14px; text-align: center; }
+  #ios-guide .ig-step { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  #ios-guide .ig-num { background: #7c3aed; color: #fff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  #ios-guide .ig-txt { font-size: 13px; color: #c4b5fd; }
+  #ios-guide .ig-close { width: 100%; margin-top: 10px; padding: 12px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: inherit; }
+
+  .header {
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 18px 20px 14px;
+    text-align: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 800; }
+  .header p { font-size: 11px; color: #a78bfa; margin-top: 3px; }
+
+  .banner { padding: 14px 14px 0; }
+  .banner-top {
+    background: linear-gradient(135deg, rgba(15,10,40,0.95), rgba(30,20,70,0.95));
+    border: 1px solid rgba(124,58,237,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px 20px 0 0;
+    padding: 14px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .banner-bottom {
+    background: linear-gradient(135deg, rgba(15,10,40,0.95), rgba(30,20,70,0.95));
+    border: 1px solid rgba(124,58,237,0.3);
+    border-top: none;
+    border-radius: 0 0 20px 20px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .bcard { text-align: center; padding: 0 6px; }
+  .bcard:not(:last-child) { border-left: 1px solid rgba(255,255,255,0.07); }
+  .bcard .blabel { font-size: 9px; color: #64748b; margin-bottom: 5px; }
+  .bcard .bval { font-size: 17px; font-weight: 800; }
+  .bcard .bsub { font-size: 9px; color: #475569; margin-top: 2px; }
+
+  .progress-wrap { padding: 12px 14px 0; }
+  .progress-hd { display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-bottom: 5px; }
+  .progress-bar { background: rgba(255,255,255,0.08); border-radius: 99px; height: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+  .tabs { display: flex; gap: 8px; padding: 14px 14px 0; }
+  .tab-btn {
+    flex: 1; padding: 10px 0; border-radius: 12px; border: none; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,0.06); color: #64748b; transition: all 0.2s;
+  }
+  .tab-btn.active { background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; }
+
+  .tab-content { padding: 14px; display: none; }
+  .tab-content.active { display: block; }
+
+  .card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 20px; padding: 18px;
+    border: 1px solid rgba(255,255,255,0.09);
+    margin-bottom: 12px;
+  }
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+
+  input[type="date"], input[type="number"] {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.07); color: #fff;
+    font-size: 14px; outline: none; margin-bottom: 10px; font-family: inherit;
+  }
+  input[type="date"] { direction: ltr; }
+  input[type="number"]::placeholder { color: #475569; }
+
+  .save-btn {
+    width: 100%; padding: 13px; border-radius: 12px; border: none; cursor: pointer;
+    background: linear-gradient(135deg,#7c3aed,#4f46e5);
+    color: #fff; font-weight: 700; font-size: 15px; font-family: inherit;
+    transition: all 0.3s; margin-bottom: 12px;
+  }
+  .save-btn.saved { background: linear-gradient(135deg,#34d399,#10b981); }
+
+  .chips { display: flex; gap: 8px; margin-bottom: 14px; }
+  .chip { flex: 1; border-radius: 10px; padding: 8px; text-align: center; }
+  .chip .chip-label { font-size: 9px; margin-bottom: 3px; }
+  .chip .chip-val { font-size: 13px; font-weight: 700; }
+
+  .slider-wrap { margin-top: 4px; }
+  .slider-hd { display: flex; justify-content: space-between; font-size: 11px; color: #a78bfa; margin-bottom: 6px; }
+  input[type="range"] { width: 100%; accent-color: #7c3aed; direction: ltr; }
+
+  .suggest-box {
+    background: linear-gradient(135deg,rgba(124,58,237,0.2),rgba(79,70,229,0.2));
+    border-radius: 18px; padding: 16px; margin-bottom: 14px;
+    border: 1px solid rgba(124,58,237,0.3);
+  }
+  .suggest-box .s-label { font-size: 11px; color: #a78bfa; margin-bottom: 3px; }
+  .suggest-box .s-val { font-size: 30px; font-weight: 800; color: #c4b5fd; }
+  .suggest-box .s-sub { font-size: 10px; color: #64748b; margin-top: 3px; }
+
+  .entries-label { font-size: 11px; color: #475569; margin-bottom: 8px; }
+  .entry-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 13px; background: rgba(255,255,255,0.04);
+    border-radius: 10px; margin-bottom: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .entry-date { font-size: 12px; color: #94a3b8; }
+  .entry-net { font-size: 10px; color: #475569; margin-top: 2px; }
+  .entry-amt { font-weight: 700; color: #34d399; font-size: 15px; }
+  .del-btn { background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.3); color: #f87171; border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+  .del-btn:active { background: rgba(248,113,113,0.35); }
+  .reset-month-btn { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(248,113,113,0.3); background: rgba(248,113,113,0.08); color: #f87171; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 10px; transition: all 0.2s; }
+  .reset-month-btn:active { background: rgba(248,113,113,0.2); }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.show { display:flex; }
+  .modal-box { background: linear-gradient(135deg, #1e1b4b, #0f172a); border:1px solid rgba(248,113,113,0.4); border-radius:20px; padding:24px; max-width:320px; width:100%; text-align:center; }
+  .modal-box .m-icon { font-size:36px; margin-bottom:12px; }
+  .modal-box .m-title { font-size:16px; font-weight:800; margin-bottom:6px; }
+  .modal-box .m-sub { font-size:12px; color:#94a3b8; margin-bottom:20px; }
+  .modal-btns { display:flex; gap:10px; }
+  .modal-btns button { flex:1; padding:12px; border-radius:12px; border:none; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+  .m-cancel { background:rgba(255,255,255,0.1); color:#fff; }
+  .m-confirm { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+
+  .dist-table { background: rgba(255,255,255,0.05); border-radius: 18px; padding: 15px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; }
+  .dist-title { font-size: 12px; font-weight: 700; color: #a78bfa; margin-bottom: 10px; }
+  .dist-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .dist-row.total { border-bottom: none; margin-top: 2px; }
+  .dist-row .dl { font-size: 11px; color: #94a3b8; }
+  .dist-row.total .dl { color: #e2e8f0; font-weight: 700; }
+  .dist-row .dr { font-size: 12px; font-weight: 700; }
+
+  .ob-card { background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px 13px; margin-bottom: 8px; }
+  .ob-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .ob-name { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 13px; }
+  .ob-amounts { direction: ltr; font-size: 12px; }
+  .ob-bar-bg { background: rgba(255,255,255,0.07); border-radius: 99px; height: 5px; overflow: hidden; }
+  .ob-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+  .ob-ft { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #64748b; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
+  .stat-card { background: rgba(255,255,255,0.05); border-radius: 14px; padding: 12px 10px; border: 1px solid rgba(255,255,255,0.07); text-align: center; }
+  .stat-icon { font-size: 20px; margin-bottom: 4px; }
+  .stat-val { font-weight: 700; font-size: 16px; }
+  .stat-label { font-size: 9px; color: #475569; margin-top: 2px; }
+
+  .cal-wrap { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 13px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 12px; }
+  .cal-title { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal-day-hd { text-align: center; font-size: 9px; color: #475569; padding-bottom: 4px; }
+  .cal-cell {
+    aspect-ratio: 1; border-radius: 7px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; border: 1px solid transparent;
+  }
+  .cal-cell .cn { font-size: 9px; }
+  .cal-cell .ca { font-size: 7px; color: #34d399; }
+
+  .detail-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .detail-row { background: rgba(255,255,255,0.04); border-radius: 12px; padding: 10px 12px; margin-bottom: 7px; border: 1px solid rgba(255,255,255,0.06); }
+  .detail-hd { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .detail-date { font-size: 12px; color: #94a3b8; }
+  .detail-amt { font-weight: 700; color: #34d399; font-size: 14px; }
+  .detail-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 10px; border-radius: 6px; padding: 2px 7px; }
+  .empty { text-align: center; color: #475569; font-size: 12px; padding: 20px; }
+</style>
+</head>
+<body>
+
+<!-- Install banner (Android/Chrome) -->
+<div id="install-banner">
+  <div class="ib-icon">📲</div>
+  <div class="ib-text">
+    <div class="ib-title">ثبّت التطبيق على جوالك</div>
+    <div class="ib-sub">يشتغل بدون نت وبيانات محفوظة</div>
+  </div>
+  <button class="ib-btn" onclick="installApp()">تثبيت</button>
+  <button class="ib-close" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- iOS guide -->
+<div id="ios-guide">
+  <div class="ig-title">📲 أضف التطبيق لشاشتك الرئيسية</div>
+  <div class="ig-step"><div class="ig-num">1</div><div class="ig-txt">اضغط على زر المشاركة  <strong>⬆️</strong>  في أسفل المتصفح</div></div>
+  <div class="ig-step"><div class="ig-num">2</div><div class="ig-txt">اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong></div></div>
+  <div class="ig-step"><div class="ig-num">3</div><div class="ig-txt">اضغط <strong>إضافة</strong> — يظهر أيقونة على هاتفك مثل أي تطبيق!</div></div>
+  <button class="ig-close" onclick="document.getElementById('ios-guide').classList.remove('show')">فهمت 👍</button>
+</div>
+
+<div class="header">
+  <h1>💰 مدير دخلي الشهري</h1>
+  <p id="monthLabel"></p>
+</div>
+
+<!-- Banner -->
+<div class="banner">
+  <div class="banner-top">
+    <div class="bcard">
+      <div class="blabel">📈 إجمالي الدخل</div>
+      <div class="bval" id="b-income" style="color:#34d399">0</div>
+      <div class="bsub">ريال</div>
+    </div>
+    <div class="bcard">
+      <div class="blabel">🏦 الادخار</div>
+      <div class="bval" id="b-savings" style="color:#fbbf24">0</div>
+      <div class="bsub" id="b-savings-sub">10% من الدخل</div>
+    </div>
+    <div class="bcard">
+      <div class="blabel">🛍️ مصروف يومي</div>
+      <div class="bval" id="b-daily" style="color:#fb923c">0</div>
+      <div class="bsub" id="b-daily-sub">0 يوم × 150</div>
+    </div>
+  </div>
+  <div class="banner-bottom">
+    <div class="bcard">
+      <div class="blabel">📋 المصاريف الشهرية</div>
+      <div class="bval" style="color:#f87171">4,960</div>
+      <div class="bsub">ريال / شهر</div>
+    </div>
+    <div class="bcard">
+      <div class="blabel" id="b-rem-label">⏳ متبقي للالتزامات</div>
+      <div class="bval" id="b-rem" style="color:#f87171">4,960</div>
+      <div class="bsub">ريال</div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-hd">
+    <span>تغطية الالتزامات الشهرية</span>
+    <span id="prog-pct" style="color:#fbbf24;font-weight:700">0%</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="prog-fill" style="width:0%;background:linear-gradient(90deg,#f87171,#fbbf24)"></div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('daily',this)">اليومي</button>
+  <button class="tab-btn" onclick="switchTab('obligations',this)">الالتزامات</button>
+  <button class="tab-btn" onclick="switchTab('report',this)">التقرير</button>
+</div>
+
+<!-- Daily Tab -->
+<div class="tab-content active" id="tab-daily">
+  <div class="card">
+    <div class="card-title">➕ إضافة الدخل اليومي</div>
+    <input type="date" id="inp-date">
+    <input type="number" id="inp-amount" placeholder="أدخل المبلغ (ريال)" oninput="updateSplit()">
+
+    <!-- Per-day savings slider -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#a78bfa;margin-bottom:6px;">
+        <span>🏦 نسبة الادخار لهذا اليوم</span>
+        <span id="day-sav-label">10%</span>
+      </div>
+      <input type="range" min="0" max="50" value="10" id="inp-sav-pct" oninput="onDaySavChange(this.value)" style="width:100%;accent-color:#7c3aed;direction:ltr;">
+    </div>
+
+    <!-- Per-day expense -->
+    <input type="number" id="inp-daily-exp" placeholder="المصروف اليومي (ريال) — افتراضي 150" oninput="updateSplit()">
+
+    <!-- Live split -->
+    <div id="split-box" style="display:none;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(79,70,229,0.15));border:1px solid rgba(124,58,237,0.35);border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:10px;text-align:center">📊 توزيع المبلغ</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(251,191,36,0.1);border-radius:10px;padding:9px 12px;">
+          <span style="font-size:12px;color:#fbbf24">🏦 الادخار (<span id="sp-sav-pct">10</span>%)</span>
+          <span style="font-size:16px;font-weight:800;color:#fbbf24" id="sp-sav">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(251,146,60,0.1);border-radius:10px;padding:9px 12px;">
+          <span style="font-size:12px;color:#fb923c">🛍️ المصروف اليومي</span>
+          <span style="font-size:16px;font-weight:800;color:#fb923c" id="sp-exp">150</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(96,165,250,0.12);border-radius:10px;padding:9px 12px;border:1px solid rgba(96,165,250,0.2);">
+          <span style="font-size:12px;color:#60a5fa">📋 للالتزامات الشهرية</span>
+          <span style="font-size:16px;font-weight:800;color:#60a5fa" id="sp-ob">0</span>
+        </div>
+      </div>
+      <div id="sp-warn" style="display:none;margin-top:8px;text-align:center;font-size:11px;color:#f87171;background:rgba(248,113,113,0.1);border-radius:8px;padding:6px;">⚠️ المبلغ أقل من المصروف اليومي!</div>
+    </div>
+
+    <button class="save-btn" id="save-btn" onclick="handleSave()">💾 حفظ الدخل</button>
+
+    <div class="chips">
+      <div class="chip" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2)">
+        <div class="chip-label" style="color:#92400e">🏦 متوسط الادخار</div>
+        <div class="chip-val" id="chip-sav" style="color:#fbbf24">10%</div>
+      </div>
+      <div class="chip" style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.2)">
+        <div class="chip-label" style="color:#9a3412">🛍️ متوسط المصروف</div>
+        <div class="chip-val" id="chip-exp" style="color:#fb923c">150 ريال</div>
+      </div>
+      <div class="chip" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2)">
+        <div class="chip-label" style="color:#7f1d1d">📋 شهري</div>
+        <div class="chip-val" style="color:#f87171">4,960</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="suggest-box">
+    <div class="s-label">💡 المبلغ المقترح للغد</div>
+    <div class="s-val"><span id="suggest-val">0</span> <span style="font-size:13px;font-weight:400">ريال</span></div>
+    <div class="s-sub" id="suggest-sub">يشمل الالتزامات + المصروف اليومي + الادخار</div>
+  </div>
+
+  <!-- Savings goal progress -->
+  <div id="sav-goal-card" style="display:none;background:linear-gradient(135deg,rgba(251,191,36,0.1),rgba(245,158,11,0.08));border:1px solid rgba(251,191,36,0.25);border-radius:16px;padding:14px;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span style="font-size:12px;font-weight:700;color:#fbbf24">🎯 هدف الادخار الشهري</span>
+      <span style="font-size:11px;color:#92400e" id="sav-goal-pct">0%</span>
+    </div>
+    <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:7px;overflow:hidden;margin-bottom:8px;">
+      <div id="sav-goal-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#fbbf24);width:0%;transition:width 0.5s;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;">
+      <span style="color:#64748b">تم: <span id="sav-goal-done" style="color:#fbbf24;font-weight:700">0</span> ريال</span>
+      <span style="color:#64748b">متبقي: <span id="sav-goal-rem" style="color:#f87171;font-weight:700">0</span> ريال</span>
+    </div>
+  </div>
+
+  <div class="entries-label">آخر المدخلات</div>
+  <div id="entries-list"><div class="empty">لم يتم إدخال أي دخل بعد</div></div>
+  <button class="reset-month-btn" onclick="confirmResetMonth()">🗑️ حذف جميع بيانات الشهر</button>
+</div>
+
+<!-- Obligations Tab -->
+<div class="tab-content" id="tab-obligations">
+  <div class="dist-table">
+    <div class="dist-title">توزيع الدخل الكلي</div>
+    <div class="dist-row"><span class="dl">إجمالي الدخل</span><span class="dr" id="dt-income" style="color:#34d399">0</span></div>
+    <div class="dist-row"><span class="dl" id="dt-sav-label">🏦 الادخار (متوسط —%)</span><span class="dr" id="dt-sav" style="color:#fbbf24">0</span></div>
+    <div class="dist-row"><span class="dl" id="dt-daily-label">🛍️ مصاريف يومية (0 يوم)</span><span class="dr" id="dt-daily" style="color:#fb923c">0</span></div>
+    <div class="dist-row total"><span class="dl">✅ صافي للالتزامات</span><span class="dr" id="dt-net" style="color:#60a5fa">0</span></div>
+  </div>
+  <div id="ob-list"></div>
+</div>
+
+<!-- Report Tab -->
+<div class="tab-content" id="tab-report">
+  <!-- Savings goal setting -->
+  <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:16px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:8px;">🎯 هدف الادخار الشهري</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="inp-sav-goal" placeholder="مثال: 5000 ريال" style="flex:1;margin-bottom:0;">
+      <button onclick="saveSavingsGoal()" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#000;border:none;border-radius:10px;padding:12px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">حفظ</button>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="st-days" style="color:#a78bfa">0</div><div class="stat-label">أيام مسجّلة</div></div>
+    <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-val" id="st-avg" style="color:#34d399">0</div><div class="stat-label">متوسط الدخل اليومي</div></div>
+    <div class="stat-card"><div class="stat-icon">🏦</div><div class="stat-val" id="st-sav" style="color:#fbbf24">0</div><div class="stat-label">إجمالي الادخار</div></div>
+    <div class="stat-card"><div class="stat-icon">🛍️</div><div class="stat-val" id="st-dexp" style="color:#fb923c">0</div><div class="stat-label">إجمالي المصاريف اليومية</div></div>
+    <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-val" id="st-prog" style="color:#60a5fa">0%</div><div class="stat-label">إنجاز الالتزامات</div></div>
+    <div class="stat-card"><div class="stat-icon" id="st-rem-icon">⏳</div><div class="stat-val" id="st-rem" style="color:#f87171">0</div><div class="stat-label" id="st-rem-label">المتبقي</div></div>
+  </div>
+  <div id="st-sav-goal-row" style="display:none;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:12px;color:#fbbf24;font-weight:700">🎯 هدف الادخار</span>
+    <span style="font-size:13px;font-weight:800;color:#fbbf24" id="st-sav-goal-val">—</span>
+  </div>
+  <div class="cal-wrap">
+    <div class="cal-title">📅 تقويم الشهر</div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+  <div class="detail-title">📋 تفاصيل الدخل اليومي</div>
+  <div id="detail-list"><div class="empty">لا يوجد بيانات لهذا الشهر</div></div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal-box">
+    <div class="m-icon">🗑️</div>
+    <div class="m-title" id="del-modal-title">حذف الإدخال؟</div>
+    <div class="m-sub" id="del-modal-sub">هذا الإجراء لا يمكن التراجع عنه</div>
+    <div class="modal-btns">
+      <button class="m-cancel" onclick="closeDelModal()">إلغاء</button>
+      <button class="m-confirm" id="del-modal-confirm">حذف</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── constants ──
+const OBLIGATIONS = [
+  {id:"driver",label:"السواق",amount:500,icon:"🚗"},
+  {id:"maid",label:"الشغالة",amount:700,icon:"🏠"},
+  {id:"rent",label:"الإيجار",amount:2000,icon:"🏢"},
+  {id:"net",label:"النت",amount:280,icon:"📡"},
+  {id:"mobile",label:"نت الجوال",amount:180,icon:"📱"},
+  {id:"electric",label:"الكهرباء",amount:500,icon:"⚡"},
+  {id:"groceries",label:"مقاضي البيت",amount:800,icon:"🛒"},
+];
+const TOTAL_OB = 4960;
+const DEFAULT_EXP = 150;
+const DEFAULT_SAV_PCT = 10;
+
+// ── FIXED DATE: use local timezone, not UTC ──
+function getTodayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+const TODAY_STR = getTodayStr();
+const TODAY = new Date(TODAY_STR + 'T00:00:00');
+const YEAR = TODAY.getFullYear(), MONTH = TODAY.getMonth();
+const DAYS_IN_MONTH = new Date(YEAR,MONTH+1,0).getDate();
+const STORAGE_KEY = `income_v3_${YEAR}_${MONTH+1}`;
+
+document.getElementById('monthLabel').textContent =
+  TODAY.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
+document.getElementById('inp-date').value = TODAY_STR;
+
+// ── Storage: new format {days: {date: {income, savingsPercent, dailyExpense}}, savingsGoal} ──
+function loadData(){
+  try{
+    const r = localStorage.getItem(STORAGE_KEY);
+    if(r) {
+      const parsed = JSON.parse(r);
+      // migrate old format if needed
+      if(parsed.days) {
+        const firstVal = Object.values(parsed.days)[0];
+        if(firstVal && typeof firstVal === 'number') {
+          // old format: convert
+          const newDays = {};
+          Object.entries(parsed.days).forEach(([k,v]) => {
+            newDays[k] = {income: v, savingsPercent: parsed.savings||DEFAULT_SAV_PCT, dailyExpense: DEFAULT_EXP};
+          });
+          return {days: newDays, savingsGoal: 0};
+        }
+        return parsed;
+      }
+    }
+  } catch(e){}
+  return {days:{}, savingsGoal: 0};
+}
+
+function saveStorage(d){
+  const str = JSON.stringify(d);
+  try{ localStorage.setItem(STORAGE_KEY, str); } catch(e){}
+  try{
+    const exp = new Date(); exp.setFullYear(exp.getFullYear()+1);
+    document.cookie = `income_bk=${encodeURIComponent(str)};expires=${exp.toUTCString()};path=/;SameSite=Lax`;
+  }catch(e){}
+  try{ sessionStorage.setItem(STORAGE_KEY+'_bk', str); }catch(e){}
+}
+
+function fmt(n){return Math.round(n).toLocaleString('ar-SA');}
+
+let data = loadData();
+
+// Init savings goal input
+if(data.savingsGoal) document.getElementById('inp-sav-goal').value = data.savingsGoal;
+
+// ── PWA ──
+let deferredPrompt = null;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+if (!isStandalone) {
+  if (isIOS) {
+    setTimeout(() => document.getElementById('ios-guide').classList.add('show'), 1500);
+  } else {
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault(); deferredPrompt = e;
+      document.getElementById('install-banner').classList.add('show');
+    });
+  }
+}
+function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('install-banner').classList.remove('show'); });
+}
+function dismissInstall() { document.getElementById('install-banner').classList.remove('show'); }
+
+// Register SW
+const swCode = `const CACHE='income-tracker-v3';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(cached=>{if(cached)return cached;return fetch(e.request).then(resp=>{if(e.request.url.includes(self.location.origin)){const clone=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,clone));}return resp;}).catch(()=>cached);}));});`;
+if ('serviceWorker' in navigator) {
+  const blob = new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ── compute: works with new per-day format ──
+function compute() {
+  const days = data.days;
+  const entries = Object.entries(days);
+  const daysRec = entries.length;
+  let totalIncome=0, totalSavings=0, totalDailyExp=0, totalForOb=0;
+  let totalSavPct=0;
+
+  entries.forEach(([,v])=>{
+    const inc = v.income||0;
+    const sp  = v.savingsPercent ?? DEFAULT_SAV_PCT;
+    const exp = v.dailyExpense  ?? DEFAULT_EXP;
+    const sav = Math.round(inc * sp/100);
+    const ob  = Math.max(inc - sav - exp, 0);
+    totalIncome    += inc;
+    totalSavings   += sav;
+    totalDailyExp  += exp;
+    totalForOb     += ob;
+    totalSavPct    += sp;
+  });
+
+  const avgSavPct = daysRec > 0 ? Math.round(totalSavPct/daysRec) : DEFAULT_SAV_PCT;
+  const avgExp    = daysRec > 0 ? Math.round(totalDailyExp/daysRec) : DEFAULT_EXP;
+  const obProgress = Math.min(Math.max(totalForOb,0)/TOTAL_OB,1);
+  const remaining  = Math.max(TOTAL_OB-totalForOb,0);
+  const surplus    = Math.max(totalForOb-TOTAL_OB,0);
+  const daysLeft   = Math.max(DAYS_IN_MONTH-daysRec,1);
+  // Suggested daily: remaining obligations + remaining days expense + savings
+  const obLeft = Math.max(TOTAL_OB-totalForOb,0);
+  const suggestedNet = (obLeft/daysLeft) + avgExp;
+  const suggested = avgSavPct<100 ? Math.ceil(suggestedNet/(1-avgSavPct/100)) : suggestedNet;
+
+  return {daysRec,totalIncome,totalSavings,totalDailyExp,totalForOb,obProgress,remaining,surplus,daysLeft,suggested,avgSavPct,avgExp};
+}
+
+// ── Per-day savings slider ──
+function onDaySavChange(val){
+  document.getElementById('day-sav-label').textContent = val + '%';
+  updateSplit();
+}
+
+// ── Live split preview ──
+function updateSplit(){
+  const amt = parseFloat(document.getElementById('inp-amount').value)||0;
+  const sp  = parseInt(document.getElementById('inp-sav-pct').value)||DEFAULT_SAV_PCT;
+  const exp = parseFloat(document.getElementById('inp-daily-exp').value)||DEFAULT_EXP;
+  const box = document.getElementById('split-box');
+  if(amt<=0){box.style.display='none';return;}
+  box.style.display='block';
+  const sav = Math.round(amt*sp/100);
+  const forOb = Math.max(amt-sav-exp,0);
+  document.getElementById('sp-sav-pct').textContent = sp;
+  document.getElementById('sp-sav').textContent = fmt(sav);
+  document.getElementById('sp-exp').textContent  = fmt(exp);
+  document.getElementById('sp-ob').textContent   = fmt(forOb);
+  document.getElementById('sp-warn').style.display = (amt < exp+sav)?'block':'none';
+}
+
+// ── Save savings goal ──
+function saveSavingsGoal(){
+  const g = parseFloat(document.getElementById('inp-sav-goal').value)||0;
+  data.savingsGoal = g;
+  saveStorage(data);
+  render();
+}
+
+// ── Handle save: new format ──
+function handleSave(){
+  const amt  = parseFloat(document.getElementById('inp-amount').value);
+  const date = document.getElementById('inp-date').value;
+  const sp   = parseInt(document.getElementById('inp-sav-pct').value)||DEFAULT_SAV_PCT;
+  const exp  = parseFloat(document.getElementById('inp-daily-exp').value)||DEFAULT_EXP;
+  if(!amt||amt<=0||!date) return;
+
+  // accumulate income for same day, but keep last sp/exp
+  const existing = data.days[date];
+  data.days[date] = {
+    income: (existing?.income||0) + amt,
+    savingsPercent: sp,
+    dailyExpense: exp
+  };
+  saveStorage(data);
+  document.getElementById('inp-amount').value='';
+  document.getElementById('split-box').style.display='none';
+  const btn=document.getElementById('save-btn');
+  btn.textContent='✓ تم الحفظ!'; btn.classList.add('saved');
+  setTimeout(()=>{btn.textContent='💾 حفظ الدخل';btn.classList.remove('saved');},2000);
+  render();
+}
+
+// ── Render ──
+function render(){
+  const c = compute();
+
+  // Banner
+  document.getElementById('b-income').textContent  = fmt(c.totalIncome);
+  document.getElementById('b-savings').textContent = fmt(c.totalSavings);
+  document.getElementById('b-savings-sub').textContent = `متوسط ${c.avgSavPct}%`;
+  document.getElementById('b-daily').textContent   = fmt(c.totalDailyExp);
+  document.getElementById('b-daily-sub').textContent = `${c.daysRec} يوم · متوسط ${fmt(c.avgExp)}`;
+  if(c.surplus>0){
+    document.getElementById('b-rem-label').textContent='🎉 الفائض';
+    document.getElementById('b-rem').style.color='#60a5fa';
+    document.getElementById('b-rem').textContent=fmt(c.surplus);
+  }else{
+    document.getElementById('b-rem-label').textContent='⏳ متبقي للالتزامات';
+    document.getElementById('b-rem').style.color='#f87171';
+    document.getElementById('b-rem').textContent=fmt(c.remaining);
+  }
+
+  // Progress
+  const pct = Math.round(c.obProgress*100);
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('prog-pct').style.color = c.obProgress>=1?'#34d399':'#fbbf24';
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-fill').style.background = c.obProgress>=1
+    ?'linear-gradient(90deg,#34d399,#10b981)':'linear-gradient(90deg,#f87171,#fbbf24)';
+
+  // Chips
+  document.getElementById('chip-sav').textContent = c.avgSavPct+'%';
+  document.getElementById('chip-exp').textContent = fmt(c.avgExp)+' ريال';
+
+  // Suggest
+  document.getElementById('suggest-val').textContent = fmt(c.suggested);
+  document.getElementById('suggest-sub').textContent = `يشمل الالتزامات + المصروف + الادخار · ${c.daysLeft} يوم متبقي`;
+
+  // Savings goal card
+  const goal = data.savingsGoal||0;
+  const savGoalCard = document.getElementById('sav-goal-card');
+  if(goal>0){
+    savGoalCard.style.display='block';
+    const gPct = Math.min(Math.round(c.totalSavings/goal*100),100);
+    const gRem = Math.max(goal-c.totalSavings,0);
+    document.getElementById('sav-goal-pct').textContent = gPct+'%';
+    document.getElementById('sav-goal-bar').style.width = gPct+'%';
+    document.getElementById('sav-goal-done').textContent = fmt(c.totalSavings);
+    document.getElementById('sav-goal-rem').textContent  = fmt(gRem);
+  } else {
+    savGoalCard.style.display='none';
+  }
+
+  // Entries list (last 7, detailed)
+  const entries = Object.entries(data.days).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,7);
+  const el = document.getElementById('entries-list');
+  if(!entries.length){ el.innerHTML='<div class="empty">لم يتم إدخال أي دخل بعد</div>'; }
+  else {
+    el.innerHTML = entries.map(([date,v])=>{
+      const inc = v.income||0;
+      const sp  = v.savingsPercent ?? DEFAULT_SAV_PCT;
+      const exp = v.dailyExpense   ?? DEFAULT_EXP;
+      const sav = Math.round(inc*sp/100);
+      const net = Math.max(inc-exp-sav,0);
+      const label = new Date(date+'T00:00:00').toLocaleDateString('ar-SA',{day:'numeric',month:'short',weekday:'short'});
+      return `<div class="entry-row">
+        <div>
+          <div class="entry-date">${label}</div>
+          <div class="entry-net" style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;">
+            <span style="color:#fbbf24;font-size:10px">🏦 ${sp}% = ${fmt(sav)}</span>
+            <span style="color:#fb923c;font-size:10px">🛍️ ${fmt(exp)}</span>
+            <span style="color:#60a5fa;font-size:10px">📋 ${fmt(net)}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="entry-amt">${fmt(inc)}</div>
+          <button class="del-btn" onclick="confirmDeleteDay('${date}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Obligations tab
+  document.getElementById('dt-income').textContent = fmt(c.totalIncome);
+  document.getElementById('dt-sav-label').textContent = `🏦 الادخار (متوسط ${c.avgSavPct}%)`;
+  document.getElementById('dt-sav').textContent = fmt(c.totalSavings);
+  document.getElementById('dt-daily-label').textContent = `🛍️ مصاريف يومية (${c.daysRec} يوم)`;
+  document.getElementById('dt-daily').textContent = fmt(c.totalDailyExp);
+  document.getElementById('dt-net').textContent = fmt(Math.max(c.totalForOb,0));
+  const netPos = Math.max(c.totalForOb,0);
+  document.getElementById('ob-list').innerHTML = OBLIGATIONS.map(ob=>{
+    const ratio = Math.min(netPos/TOTAL_OB,1);
+    const covered = Math.floor(ob.amount*ratio);
+    const rem = ob.amount-covered;
+    const p = Math.round((covered/ob.amount)*100);
+    const barColor = p>=100?'#34d399':'linear-gradient(90deg,#f87171,#fbbf24)';
+    return `<div class="ob-card" style="border:1px solid ${p>=100?'#34d39920':'#f8717120'}">
+      <div class="ob-hd"><div class="ob-name"><span>${ob.icon}</span><span>${ob.label}</span></div>
+      <div class="ob-amounts"><span style="color:#34d399;font-weight:700">${fmt(covered)}</span><span style="color:#475569"> / ${fmt(ob.amount)}</span></div></div>
+      <div class="ob-bar-bg"><div class="ob-bar-fill" style="width:${p}%;background:${barColor}"></div></div>
+      <div class="ob-ft"><span>${p>=100?'✅ اكتمل':'⏳ متبقي '+fmt(rem)}</span><span>${p}%</span></div></div>`;
+  }).join('');
+
+  // Stats
+  document.getElementById('st-days').textContent = c.daysRec;
+  document.getElementById('st-avg').textContent  = fmt(c.daysRec?c.totalIncome/c.daysRec:0);
+  document.getElementById('st-sav').textContent  = fmt(c.totalSavings);
+  document.getElementById('st-dexp').textContent = fmt(c.totalDailyExp);
+  document.getElementById('st-prog').textContent = Math.round(c.obProgress*100)+'%';
+  if(c.surplus>0){
+    document.getElementById('st-rem-icon').textContent='🎉';
+    document.getElementById('st-rem').textContent=fmt(c.surplus);
+    document.getElementById('st-rem').style.color='#34d399';
+    document.getElementById('st-rem-label').textContent='الفائض';
+  }else{
+    document.getElementById('st-rem-icon').textContent='⏳';
+    document.getElementById('st-rem').textContent=fmt(c.remaining);
+    document.getElementById('st-rem').style.color='#f87171';
+    document.getElementById('st-rem-label').textContent='المتبقي';
+  }
+
+  // Savings goal in report
+  const sgRep = document.getElementById('st-sav-goal-row');
+  if(sgRep) {
+    const goal = data.savingsGoal||0;
+    if(goal>0){
+      sgRep.style.display='flex';
+      const gPct = Math.min(Math.round(c.totalSavings/goal*100),100);
+      document.getElementById('st-sav-goal-val').textContent = `${fmt(c.totalSavings)} / ${fmt(goal)} (${gPct}%)`;
+    } else { sgRep.style.display='none'; }
+  }
+
+  // Calendar
+  const dayNames=['أح','إث','ث','أر','خ','ج','س'];
+  let calHTML = dayNames.map(d=>`<div class="cal-day-hd">${d}</div>`).join('');
+  const firstDay = new Date(YEAR,MONTH,1).getDay();
+  for(let i=0;i<firstDay;i++) calHTML+='<div></div>';
+  for(let i=1;i<=DAYS_IN_MONTH;i++){
+    const y=YEAR, m=String(MONTH+1).padStart(2,'0'), dd=String(i).padStart(2,'0');
+    const key=`${y}-${m}-${dd}`;
+    const entry = data.days[key];
+    const amt = entry?.income||0;
+    const isToday = key===TODAY_STR;
+    const cellDate = new Date(key+'T00:00:00');
+    const isFuture = cellDate > TODAY;
+    const bg = amt>0?'rgba(52,211,153,0.16)':isFuture?'transparent':'rgba(255,255,255,0.03)';
+    const border = isToday?'2px solid #7c3aed':'1px solid transparent';
+    const nc = amt>0?'#34d399':isFuture?'#1e293b':'#334155';
+    calHTML+=`<div class="cal-cell" style="background:${bg};border:${border}"><span class="cn" style="color:${nc}">${i}</span>${amt>0?`<span class="ca">${(amt/1000).toFixed(1)}k</span>`:''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = calHTML;
+
+  // Detail list (all days, reversed, with full breakdown)
+  const detailDays = Object.entries(data.days)
+    .filter(([k])=>{ const d=new Date(k+'T00:00:00'); return d.getMonth()===MONTH&&d.getFullYear()===YEAR; })
+    .sort((a,b)=>b[0].localeCompare(a[0]));
+  if(!detailDays.length){ document.getElementById('detail-list').innerHTML='<div class="empty">لا يوجد بيانات</div>'; }
+  else {
+    document.getElementById('detail-list').innerHTML = detailDays.map(([key,v])=>{
+      const inc = v.income||0;
+      const sp  = v.savingsPercent ?? DEFAULT_SAV_PCT;
+      const exp = v.dailyExpense   ?? DEFAULT_EXP;
+      const sav = Math.round(inc*sp/100);
+      const net = Math.max(inc-exp-sav,0);
+      const d   = new Date(key+'T00:00:00');
+      const wday= d.toLocaleDateString('ar-SA',{weekday:'short'});
+      const dayN= d.getDate();
+      return `<div class="detail-row">
+        <div class="detail-hd">
+          <span class="detail-date">يوم ${dayN} · ${wday} · ${key}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="detail-amt">${fmt(inc)} ريال</span>
+            <button class="del-btn" onclick="confirmDeleteDay('${key}')">🗑️</button>
+          </div>
+        </div>
+        <div class="detail-tags">
+          <span class="tag" style="color:#fbbf24;background:rgba(251,191,36,0.1)">🏦 ${sp}% = ${fmt(sav)}</span>
+          <span class="tag" style="color:#fb923c;background:rgba(251,146,60,0.1)">🛍️ ${fmt(exp)}</span>
+          <span class="tag" style="color:#60a5fa;background:rgba(96,165,250,0.1)">📋 ${fmt(net)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── delete helpers ──
+let pendingDeleteKey=null, pendingDeleteType=null;
+function confirmDeleteDay(dateKey){
+  pendingDeleteKey=dateKey; pendingDeleteType='day';
+  const v = data.days[dateKey];
+  const label=new Date(dateKey+'T00:00:00').toLocaleDateString('ar-SA',{day:'numeric',month:'long',weekday:'long'});
+  document.getElementById('del-modal-title').textContent='حذف دخل '+label+'؟';
+  document.getElementById('del-modal-sub').textContent='المبلغ: '+fmt(v?.income||0)+' ريال';
+  document.getElementById('del-modal-confirm').onclick=executeDelete;
+  document.getElementById('del-modal').classList.add('show');
+}
+function confirmResetMonth(){
+  pendingDeleteType='month';
+  document.getElementById('del-modal-title').textContent='حذف بيانات الشهر كاملة؟';
+  document.getElementById('del-modal-sub').textContent='سيتم حذف جميع إدخالات هذا الشهر ولا يمكن التراجع';
+  document.getElementById('del-modal-confirm').onclick=executeDelete;
+  document.getElementById('del-modal').classList.add('show');
+}
+function closeDelModal(){ document.getElementById('del-modal').classList.remove('show'); pendingDeleteKey=null; pendingDeleteType=null; }
+function executeDelete(){
+  if(pendingDeleteType==='day'&&pendingDeleteKey) delete data.days[pendingDeleteKey];
+  else if(pendingDeleteType==='month') data.days={};
+  saveStorage(data); closeDelModal(); render();
+}
+
+render();
+</script>
+
+
+</body>
+</html>
